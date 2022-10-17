@@ -22,6 +22,7 @@ library(sf)
 library(ggthemes)
 library(geojsonio)
 
+#oecd minimum wages
 minimum_wage_url = "https://stats.oecd.org/index.aspx?DataSetCode=RMW" #Defines our the main url we will use for scraping
 mw_page = read_html(minimum_wage_url) #Reads in the html body from the webpage
 countries1 = mw_page %>% html_nodes(xpath = '//*[@class="RowDimLabel"]') %>% html_text()
@@ -146,6 +147,7 @@ melted_mwdf$`Years` = as.numeric(melted_mwdf$`Years`)
 melted_mwdf = melted_mwdf %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
 
 
+#oecd union
 union_url = "https://stats.oecd.org/index.aspx?DataSetCode=TUD" #Defines our the main url we will use for scraping
 union_page = read_html(union_url) #Reads in the html body from the webpage
 
@@ -273,8 +275,7 @@ melted_uniondf = melted_uniondf %>% filter(`Countries` == 'New Zealand' | `Count
 
 melted_uniondf = melted_uniondf %>% na.omit()
 
-
-
+#global depression
 depression <- read.csv("https://raw.githubusercontent.com/lostconnectionhere/mental_health/main/data/prevalence-of-depression-males-vs-females.csv")
 names(depression) <- c('Countries', 'Code', 'Years', 'Prevalence_depr_male', 'Prevalence_depr_female', 'Population_Estimate', 'Continent')
 depression = select(depression, -c('Continent'))
@@ -291,7 +292,7 @@ melted_depdf = merged_dep_df %>% filter(`Countries` == 'New Zealand' | `Countrie
 melted_depdf$`Years` = as.numeric(melted_depdf$`Years`)
 
 
-
+#global suicides
 suicides <- read.csv("https://raw.githubusercontent.com/popsnot/DATA201-Group-Project-2022/main/suicide-death-rates.csv") # reading csv directly from our github
 names(suicides) <- c('Countries', 'Code', 'Years', 'Suicides_Per100k') #renaming
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -303,12 +304,93 @@ melted_suidf = merged_sui_df %>% filter(`Countries` == 'New Zealand' | `Countrie
 melted_suidf$`Years` = as.numeric(melted_suidf$`Years`)
 
 
+#oecd labour
+oecdlabour_df <- read.csv('https://stats.oecd.org/sdmx-json/data/DP_LIVE/.HRWKD.../OECD?contentType=csv&detail=code&separator=comma&csv-lang=en')
+oecdlabour_df <- (oecdlabour_df %>% select(LOCATION, TIME, Value))
+oecdlabour_df = tibble(Countries = oecdlabour_df$`LOCATION`, Years = oecdlabour_df$`TIME`, Hours = oecdlabour_df$`Value`)
+
+codes_url = 'https://www.worlddata.info/countrycodes.php'
+code_page = read_html(codes_url) #Reads in the html body from the webpage
+code_page %>% glimpse() #Double check that the body has read in correctly (we look at the classes of the objects)
+
+countries_url = 'http://www.energybc.ca/cache/nuclear/nuclear2/www.oecd.org/document/1/0,2340,en_2649_201185_1889402_1_1_1_1,00.html'
+countries_page = read_html(countries_url) #Reads in the html body from the webpage
+countries_page %>% glimpse() #Double check that the body has read in correctly (we look at the classes of the objects)
+valid_countries = countries_page %>% html_nodes(xpath = '//*[@class="more"]') %>% html_text()
+valid_countries = valid_countries[1:length(valid_countries)-1]
+
+for (i in seq.int(1, length(valid_countries))){
+    if (valid_countries[i] == 'Korea'){
+        valid_countries[i] = 'South Korea'
+    }
+}
+
+all_codes = code_page %>% html_nodes(xpath = '//*[@class="std100 hover"]') %>% html_text()
+country_codes = unlist(strsplit(all_codes, "[.]"))
+output = array()
+countries = array()
+codes = array()
+for (country_data in country_codes){
+    country_data = substring(country_data, 1, nchar(country_data)-8)
+    country_data = substring(country_data, 3, nchar(country_data))
+    country_data = removeNumbers(country_data)
+    code = substring(country_data, nchar(country_data)-2, nchar(country_data))
+    country = substring(country_data, 1, nchar(country_data)-3)
+    countries = countries %>% append(country)
+    codes = codes %>% append(code)
+}
+
+output = output[4:length(output)]
+countries = countries[5:length(countries)-1]
+codes = codes[5:length(codes)-1]
+
+countries2 = array()
+
+for (country in countries){
+    country = substring(country, 1, nchar(country)-2)
+    countries2 = countries2 %>% append(country)
+}
+
+countries2 = countries2[2:length(countries2)]
+
+countriesAndCodes = function(countries2, codes) {
+    output_countries = array()
+    output_codes = array()
+    for (i in seq.int(1, length(countries2))){
+        if (countries2[i] %in% valid_countries){
+            output_countries = output_countries %>% append(countries2[i])
+            output_codes = output_codes %>% append(codes[i])
+        }
+    }
+    output_list = as.list(output_countries[2:length(output_countries)])
+    names(output_list) = as.list(output_codes[2:length(output_codes)])
+    return(output_list)
+}
+
+list_for_conversions = countriesAndCodes(countries2, codes)
+
+table_codes = oecdlabour_df$`Countries`
+
+converted_countries = array()
+for (i in seq.int(1, length(table_codes))){
+    converted_countries = converted_countries %>% append(as.character(list_for_conversions[table_codes[i]]))
+}
+
+oecdlabour_df$`Countries` = converted_countries[2:length(converted_countries)]
+
+
+filtered_oecd <- oecdlabour_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
+
+
+
 #merging dataframes
 main_df = merge(melted_uniondf, melted_mwdf, by = c("Countries", "Years"))
 main_df = merge(main_df, melted_depdf, by=c("Countries", "Years"))
 main_df = main_df %>% mutate(Countries = as.factor(Countries))
 main_df = main_df %>% mutate(Dep_Prevalence = (Prevalence_depr_male + Prevalence_depr_female)/2)
-maindata = merge(main_df, melted_suidf, by=c("Countries", "Years"))
-maindata = maindata %>% select(-c(`Code.x`, `Code.y`, `Geometry.x`, `Geometry.y`))
+main_df = merge(main_df, melted_suidf, by=c("Countries", "Years"))
+main_df = merge(main_df, filtered_oecd, by=c("Countries", "Years"))
+main_df = subset(main_df, select = -c(Prevalence_depr_male, Prevalence_depr_female, Geometry.x, Geometry.y, Code.x, Code.y))
+maindata = main_df
 
 usethis::use_data(maindata, overwrite = TRUE)
