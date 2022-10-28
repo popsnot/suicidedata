@@ -10,6 +10,7 @@ library(polite) #For web scraping
 library(xml2)
 
 
+#OECD union wrangling
 union_url = "https://stats.oecd.org/index.aspx?DataSetCode=TUD" #Defines our the main url we will use for scraping
 union_page = read_html(union_url) #Reads in the html body from the webpage
 
@@ -37,7 +38,9 @@ for (i in seq.int(1, length(countries_))){
         countries_[i] = 'South Korea'
     }
 }
-
+#In the OECD Stats datasets in particular - South Korea was called Korea, which prevented joins, as they had different values.
+#This for loop just checks for 'Korea' in the array of countries and changes it to South Korea, allowing us to join
+#this dataframe with the others.
 
 step = 21
 union_data = as.vector(sapply(0 : (length(data3) / step - 1),
@@ -71,71 +74,40 @@ reorder = function(array, output) {
 union_data = reorder(next_set2, list_2000)
 union_data = union_data %>% na.omit()
 
-list_2000 = array()
-list_2001 = array()
-list_2002 = array()
-list_2003 = array()
-list_2004 = array()
-list_2005 = array()
-list_2006 = array()
-list_2007 = array()
-list_2008 = array()
-list_2009 = array()
-list_2010 = array()
-list_2011 = array()
-list_2012 = array()
-list_2013 = array()
-list_2014 = array()
-list_2015 = array()
-list_2016 = array()
-list_2017 = array()
-list_2018 = array()
-list_2019 = array()
-list_2020 = array()
-
-
-union_future_cols= list(list_2000, list_2001, list_2002, list_2003, list_2004, list_2005, list_2006, list_2007, list_2008, list_2009, list_2010, list_2011,list_2012,
-                        list_2013, list_2014, list_2015,list_2016,list_2017,list_2018, list_2019, list_2020)
-index=1
-x1=1
-x2=39
-for (col in union_future_cols){
-    union_future_cols[index] = list(union_data[x1:x2])
-    index=index+1
-    x1=x1+39
-    x2=x2+39
+index = 1
+x1 = 1
+x2 = 39
+create_ud_dataframe = function(data, x1, x2, index){
+    columns = array()
+    output = data.frame(Countries = countries_)
+    while (x2 <= length(data)){
+        columns = columns %>% append(list(data[x1:x2]))
+        index=index+1
+        x1=x1+39
+        x2=x2+39
+    }
+    columns = columns[2:length(columns)]
+    for(i in 1:length(columns)) {
+        if (i < 10){
+            sub10colnames = paste0("200", i-1)
+            output[[sub10colnames]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
+        }
+        else{
+            bov10colnames = paste0("20", i-1)
+            output[[bov10colnames]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
+        }
+    }
+    return(output)
 }
 
-union_df = tibble(Countries = countries_, '2000' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[1]), perl=TRUE)),
-                  '2001'= as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[2]), perl=TRUE)),
-                  '2002' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[3]), perl=TRUE)),
-                  '2003' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[4]), perl=TRUE)),
-                  '2004' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[5]), perl=TRUE)),
-                  '2005' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[6]), perl=TRUE)),
-                  '2006' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[7]), perl=TRUE)),
-                  '2007' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[8]), perl=TRUE)),
-                  '2008' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[9]), perl=TRUE)),
-                  '2009' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[10]), perl=TRUE)),
-                  '2010' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[11]), perl=TRUE)),
-                  '2011' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[12]), perl=TRUE)),
-                  '2012' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[13]), perl=TRUE)),
-                  '2013' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[14]), perl=TRUE)),
-                  '2014' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[15]), perl=TRUE)),
-                  '2015' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[16]), perl=TRUE)),
-                  '2016' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[17]), perl=TRUE)),
-                  '2017' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[18]), perl=TRUE)),
-                  '2018' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[19]), perl=TRUE)),
-                  '2019' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[20]), perl=TRUE)),
-                  '2020' = as.numeric(gsub("(*UCP)\\s*", "", unlist(union_future_cols[21]), perl=TRUE)))
-
+union_df = create_ud_dataframe(union_data, x1, x2, index)
 union_df = union_df %>% filter(`Countries` != 'OECD - Total')
-
 uniondata = union_df %>% pivot_longer(`2000`:`2020`, names_to = "Years", values_to = "UnionDensity")
-
 uniondata$`Years` = as.numeric(uniondata$`Years`)
 
+#Filtering dataframes for countries of interest
 coi_uniondata = uniondata %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
-
 coi_uniondata = coi_uniondata %>% na.omit()
+
 
 usethis::use_data(uniondata, coi_uniondata, overwrite = TRUE)
