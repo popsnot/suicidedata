@@ -113,7 +113,7 @@ create_mw_dataframe = function(data, x1, x2, index){
     }
     columns = columns[2:length(columns)] #Removes the NA created when initialising the array
     for(i in 1:length(columns)) { #For loop to add each column to the dataframe
-        if (i < 10){
+        if (i <= 10){
             sub10colnames = paste0("200", i-1) #Dynamic name of variable for dataframe
             output[[sub10colnames]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
             #Creates the variable in dataframe using the string defined before as the name - gsub function removes the non-ASCII character
@@ -134,7 +134,7 @@ min_wage_df = create_mw_dataframe(mw_data, x1, x2, index)
 
 #Code to remove the non-ASCII character was found on Stack Overflow
 
-melted_mwdf = min_wage_df %>% pivot_longer(`2001`:`2020`, names_to = "Years", values_to = "Wages")
+melted_mwdf = min_wage_df %>% pivot_longer(`2000`:`2020`, names_to = "Years", values_to = "Wages")
 
 melted_mwdf$`Years` = as.numeric(melted_mwdf$`Years`)
 
@@ -221,7 +221,7 @@ create_ud_dataframe = function(data, x1, x2, index){
     }
     columns = columns[2:length(columns)] #Removes the NA created when initialising the array
     for(i in 1:length(columns)) { #For loop to add each column to the dataframe
-        if (i < 10){
+        if (i <= 10){
             sub10colnames = paste0("200", i-1) #Dynamic name of variable for dataframe
             output[[sub10colnames]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
             #Creates the variable in dataframe using the string defined before as the name - gsub function removes the non-ASCII character

@@ -88,7 +88,7 @@ create_ud_dataframe = function(data, x1, x2, index){
     }
     columns = columns[2:length(columns)]
     for(i in 1:length(columns)) {
-        if (i < 10){
+        if (i <= 10){
             sub10colnames = paste0("200", i-1)
             output[[sub10colnames]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
         }

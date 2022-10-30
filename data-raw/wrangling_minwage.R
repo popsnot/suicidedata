@@ -96,7 +96,7 @@ create_mw_dataframe = function(mw_data, x1, x2, index){
     }
     columns = columns[2:length(columns)]
     for(i in 1:length(columns)) {
-        if (i < 10){
+        if (i <= 10){
             sub10colname = paste0("200", i)
             output[[sub10colname]] = with(output, as.numeric(gsub("(*UCP)\\s*", "", unlist(columns[i]), perl=TRUE)))
         }
@@ -110,7 +110,7 @@ create_mw_dataframe = function(mw_data, x1, x2, index){
 
 min_wage_df = create_mw_dataframe(mw_data, x1, x2, index)
 
-melted_mwdf = min_wage_df %>% pivot_longer(`2001`:`2020`, names_to = "Years", values_to = "Wages")
+melted_mwdf = min_wage_df %>% pivot_longer(`2000`:`2020`, names_to = "Years", values_to = "Wages")
 minwagedata = melted_mwdf
 
 
