@@ -102,7 +102,7 @@ x2=32
 
 #Function to create the dataframe - uses dynamic variable naming for years and gsub function to remove non-ASCII characters present after
 #webscraping. Output is our wide-format union density dataframe, with each year of observations as a variable (as seen on website)
-create_ud_dataframe = function(data, x1, x2, index){
+create_mw_dataframe = function(data, x1, x2, index){
     columns = array() #Initialises the array of year variables
     output = data.frame(Countries = countries) #Creates the dataframe using our Countries array
     while (x2 <= length(data)){ #While loop terminating when we have wrangled all data
@@ -140,8 +140,6 @@ melted_mwdf$`Years` = as.numeric(melted_mwdf$`Years`)
 
 melted_mwdf = melted_mwdf %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' |
                                          `Countries` == 'United States' | `Countries` == 'South Korea')
-
-
 
 
 
@@ -267,18 +265,10 @@ depression <- read.csv(
 names(depression) <- c('Countries', 'Code', 'Years', 'Prevalence_depr_male', 'Prevalence_depr_female', 'Population_Estimate', 'Continent')
 depression = select(depression, -c('Continent'))
 depression = na.omit(depression)
-
-world <- ne_countries(scale = "medium", returnclass = "sf")
-class(world)
-
-world = select(world, c(gu_a3, geometry))
-
-names(world) <- c('Code', 'Geometry')
-merged_dep_df = merge(depression, world, by = "Code") %>% arrange(Years)
+merged_dep_df = depression %>% arrange(Years)
 melted_depdf = merged_dep_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' |
                                             `Countries` == 'United States' | `Countries` == 'South Korea')
 melted_depdf$`Years` = as.numeric(melted_depdf$`Years`)
-
 
 
 
@@ -288,10 +278,7 @@ melted_depdf$`Years` = as.numeric(melted_depdf$`Years`)
 suicides <- read.csv("https://raw.githubusercontent.com/popsnot/DATA201-Group-Project-2022/main/suicide-death-rates.csv")
 # reading csv directly from our github
 names(suicides) <- c('Countries', 'Code', 'Years', 'Suicides_Per100k') #renaming
-world <- ne_countries(scale = "medium", returnclass = "sf")
-world = select(world, c(gu_a3, geometry)) # selecting chosen column
-names(world) <- c('Code', 'Geometry') #
-merged_sui_df = merge(suicides, world, by = "Code") %>% arrange(Years)
+merged_sui_df = suicides %>% arrange(Years)
 
 melted_suidf = merged_sui_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' |
                                             `Countries` == 'United States' | `Countries` == 'South Korea')
@@ -395,9 +382,10 @@ main_df = main_df %>% mutate(Dep_Prevalence = (Prevalence_depr_male + Prevalence
 #Creates an average depression prevalence variable based on the mean of male and female
 main_df = merge(main_df, melted_suidf, by=c("Countries", "Years"))
 main_df = merge(main_df, filtered_oecd, by=c("Countries", "Years"))
-main_df = subset(main_df, select = -c(Prevalence_depr_male, Prevalence_depr_female, Geometry.x, Geometry.y, Code.x, Code.y))
+main_df = main_df %>% subset(select = -c(Prevalence_depr_male, Prevalence_depr_female, Code.x, Code.y))
 #Merged the generated dataframes and only selected relevant columns
 maindata = main_df
+maindata
 
 
 

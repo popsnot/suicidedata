@@ -18,10 +18,7 @@ library(geojsonio)
 
 suicides <- read.csv("https://raw.githubusercontent.com/popsnot/DATA201-Group-Project-2022/main/suicide-death-rates.csv") # reading csv directly from our github
 names(suicides) <- c('Countries', 'Code', 'Years', 'Suicides_Per100k') #renaming
-world <- ne_countries(scale = "medium", returnclass = "sf")
-world = select(world, c(gu_a3, geometry)) # selecting chosen column
-names(world) <- c('Code', 'Geometry') # merging by shared column
-merged_sui_df = merge(suicides, world, by = "Code") %>% arrange(Years)
+merged_sui_df = suicides %>% arrange(Years)
 suidata = merged_sui_df
 
 melted_suidf = merged_sui_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
@@ -29,19 +26,12 @@ melted_suidf$`Years` = as.numeric(melted_suidf$`Years`)
 coi_suidata = melted_suidf
 
 
-
 depression <- read.csv("https://raw.githubusercontent.com/lostconnectionhere/mental_health/main/data/prevalence-of-depression-males-vs-females.csv")
 names(depression) <- c('Countries', 'Code', 'Years', 'Prevalence_depr_male', 'Prevalence_depr_female', 'Population_Estimate', 'Continent')
 depression = select(depression, -c('Continent'))
 depression = na.omit(depression)
 
-world <- ne_countries(scale = "medium", returnclass = "sf")
-class(world)
-
-world = select(world, c(gu_a3, geometry))
-
-names(world) <- c('Code', 'Geometry')
-merged_dep_df = merge(depression, world, by = "Code") %>% arrange(Years)
+merged_dep_df = depression %>% arrange(Years)
 depressiondata = merged_dep_df
 melted_depdf = merged_dep_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
 melted_depdf$`Years` = as.numeric(melted_depdf$`Years`)
