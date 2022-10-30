@@ -383,7 +383,7 @@ filtered_oecd <- oecdlabour_df %>% filter(`Countries` == 'New Zealand' | `Countr
 
 
 
-#Merging dataframes=
+#Merging dataframes
 #Primary key = Countries, Years
 main_df = merge(melted_uniondf, melted_mwdf, by = c("Countries", "Years"))
 #creates the main dataframe by merging the union and minimum wage data on the common attribute pair of countries and years

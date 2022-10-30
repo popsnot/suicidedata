@@ -22,11 +22,11 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 world = select(world, c(gu_a3, geometry)) # selecting chosen column
 names(world) <- c('Code', 'Geometry') # merging by shared column
 merged_sui_df = merge(suicides, world, by = "Code") %>% arrange(Years)
-suicidedata = merged_sui_df
+suidata = merged_sui_df
 
 melted_suidf = merged_sui_df %>% filter(`Countries` == 'New Zealand' | `Countries` == 'Netherlands' | `Countries` == 'United States' | `Countries` == 'South Korea')
 melted_suidf$`Years` = as.numeric(melted_suidf$`Years`)
-coi_suicidedata = melted_suidf
+coi_suidata = melted_suidf
 
 
 
@@ -48,4 +48,4 @@ melted_depdf$`Years` = as.numeric(melted_depdf$`Years`)
 coi_depressiondata = melted_depdf
 
 
-usethis::use_data(depressiondata, coi_depressiondata, suicidedata, coi_suicidedata, overwrite = TRUE)
+usethis::use_data(depressiondata, coi_depressiondata, suidata, coi_suidata, overwrite = TRUE)
