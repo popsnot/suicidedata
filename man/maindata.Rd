@@ -24,6 +24,6 @@ A data frame with 63 rows and 9 variables:
 maindata
 }
 \description{
-Main dataframe containing all variables
+Main dataframe containing all variables, use this for modelling
 }
 \keyword{datasets}

@@ -21,6 +21,6 @@ A data frame with 6000 rows and 5 variables:
 suidata
 }
 \description{
-Dataset of Global Suicide Rates
+Dataset of Global Suicides per 100,000 people
 }
 \keyword{datasets}
